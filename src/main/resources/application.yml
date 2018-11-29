@@ -1,0 +1,13 @@
+server:
+  port: 8081
+
+spring:
+  rabbitmq:
+    virtual-host: /
+    addresses: 192.168.177.128:5672
+    username: njm
+    password: 123456
+    publisher-confirms: true
+    listener:
+      simple:
+        acknowledge-mode: manual
