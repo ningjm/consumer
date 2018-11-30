@@ -26,6 +26,9 @@ import java.util.Map;
  * 路由：指定key
  * 通配符：匹配key（正确实例key.*）(错误实例：key*)
  * ④同一个队列，多个消费者：就算抢到消息的那个消费者没有确认消费。别的消费者也不会得到该消息了。因为消息从一进来就已经分配给哪个消费者
+ * ⑤在topic/direct模式下，如果一个队列绑定了两个不同的key，那么只要匹配到了其中一个key。都可以进入该队列
+ * ⑥不同的队列可以创建相同的key
+ * ⑦同一个交换机，同一个队列，不同的消费者能不能都接收到同一条消息。答案：不能
  */
 
 
@@ -86,7 +89,7 @@ public class ShopConsumer {
             bindings = @QueueBinding(
                     value = @Queue(value = "queues_shop_topic2",durable = "true"),
                     exchange = @Exchange(name = "exchang_shop",durable = "true",type = "topic"),
-                    key = "key.*"
+                    key = "key.del"
             )
     )
     @RabbitHandler
@@ -100,6 +103,35 @@ public class ShopConsumer {
             e.printStackTrace();
         }
     }
+
+
+
+    /**
+     * topic模式
+     * 同一个交换机，同一个队列，不同的消费者(用来测试同一个交换机，同一个队列，不同的消费者能不能都接收到同一条消息。答案：不能)
+     * @param shop
+     * @param headers
+     * @param channel
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(value = "queues_shop_topic2",durable = "true"),
+                    exchange = @Exchange(name = "exchang_shop",durable = "true",type = "topic"),
+                    key = "key.sel"
+            )
+    )
+    @RabbitHandler
+    public void onShopListen3(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+        try {
+            //业务成功，消息确认消费
+            channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
+            System.out.println(shop.getCategory());
+            System.out.println("我是消费者3业务成功，消息确认消费");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 
@@ -120,12 +152,12 @@ public class ShopConsumer {
             )
     )
     @RabbitHandler
-    public void onShopListen3(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+    public void onShopListen4(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
         try {
             //业务成功，消息确认消费
             channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
             System.out.println(shop.getCategory());
-            System.out.println("我是消费者3业务成功，消息确认消费");
+            System.out.println("我是消费者4业务成功，消息确认消费");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -148,13 +180,13 @@ public class ShopConsumer {
             )
     )
     @RabbitHandler
-    public void onShopListen4(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+    public void onShopListen5(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
         System.out.println("我是消费者4业务成功，消息确认消费");
 //        try {
 //            //业务成功，消息确认消费
 //            channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
 //            System.out.println(shop.getCategory());
-//            System.out.println("我是消费者4业务成功，消息确认消费");
+//            System.out.println("我是消费者5业务成功，消息确认消费");
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
@@ -176,14 +208,98 @@ public class ShopConsumer {
             )
     )
     @RabbitHandler
-    public void onShopListen5(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+    public void onShopListen6(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
         try {
             //业务成功，消息确认消费
             channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
             System.out.println(shop.getCategory());
-            System.out.println("我是消费者5业务成功，消息确认消费");
+            System.out.println("我是消费者6业务成功，消息确认消费");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
+    /**
+     * direct模式
+     * 同一个交换机，不同队列
+     * @param shop
+     * @param headers
+     * @param channel
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(value = "queues_shop_direct",durable = "true"),
+                    exchange = @Exchange(name = "exchang_shop3",durable = "true",type = "direct"),
+                    key = "key"
+            )
+    )
+    @RabbitHandler
+    public void onShopListen7(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+        try {
+            //业务成功，消息确认消费
+            channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
+            System.out.println(shop.getCategory());
+            System.out.println("我是消费者7业务成功，消息确认消费");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     * direct模式
+     * 同一个交换机，不同队列
+     * @param shop
+     * @param headers
+     * @param channel
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(value = "queues_shop_direct2",durable = "true"),
+                    exchange = @Exchange(name = "exchang_shop3",durable = "true",type = "direct"),
+                    key = "key2"
+            )
+    )
+    @RabbitHandler
+    public void onShopListen8(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+        try {
+            //业务成功，消息确认消费
+            channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
+            System.out.println(shop.getCategory());
+            System.out.println("我是消费者8业务成功，消息确认消费");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     * direct模式
+     * 同一个交换机，同一个队列，不同的消费者(用来测试同一个交换机，同一个队列，不同的消费者能不能都接收到同一条消息。答案：不能)
+     * @param shop
+     * @param headers
+     * @param channel
+     */
+    @RabbitListener(
+            bindings = @QueueBinding(
+                    value = @Queue(value = "queues_shop_direct2",durable = "true"),
+                    exchange = @Exchange(name = "exchang_shop3",durable = "true",type = "direct"),
+                    key = "key2"
+            )
+    )
+    @RabbitHandler
+    public void onShopListen9(@Payload Shop shop, @Headers Map<String,Object> headers, Channel channel){
+        try {
+            //业务成功，消息确认消费
+            channel.basicAck((Long)headers.get(AmqpHeaders.DELIVERY_TAG), false);//确认消息-消费消息
+            System.out.println(shop.getCategory());
+            System.out.println("我是消费者9业务成功，消息确认消费");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
